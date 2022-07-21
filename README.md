@@ -8,3 +8,14 @@ Android Sample Code Project WorkSpace
 - 사용자의 터치 이벤트나 mutableState 의 상태가 변화를 리스너를 통해서 특정 기능을 수행하고, UI 업데이트를 하게 됨
 - 모든 화면의 상태는 ViewModel
 
+### 2. HiltRetrofitApp
+- HILT 를 통한 Retrofit Inject 방법
+- ViewModel 을 통하여 API Response 결과를 UI 업데이트함(XML)
+- MutalbeStateFlow 가 아니라 MutableLiveData 사용
+
+### 3. ComposeViewModelHilt
+- https://howtodoandroid.com/movielist.json 를 쿼리하여 json 내용을 리스트로 보여줌
+- 리스트에는 MovieItem 으로서 name, category, imageUrl 등을 제공함
+- ViewModel 과 Retrofit 을 Hilt 를 통해서 주입함
+- Flow State 를 통하여 UI 를 갱신하도록 함
+- Coroutine 을 통하여 Retrofit 통신함
