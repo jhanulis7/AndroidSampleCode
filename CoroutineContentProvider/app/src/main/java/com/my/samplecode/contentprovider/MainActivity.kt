@@ -18,14 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
+import com.my.samplecode.contentprovider.ui.screen.ContactsScreen
 import com.my.samplecode.contentprovider.ui.theme.CoroutineContentProviderTheme
+import com.my.samplecode.contentprovider.vm.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 
 //reference :
 // 1. https://jossypaul.medium.com/loading-data-from-contentprovider-using-coroutines-and-livedata-34aa5e79b8ba
@@ -46,7 +47,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
                     requestPermission()
-                    mainViewModel.fetchContacts(application.contentResolver)
+                    ContactsScreen(modifier = Modifier, viewModel = mainViewModel)
+                    mainViewModel.fetchContacts(Dispatchers.IO)
                 }
             }
         }
@@ -76,7 +78,9 @@ fun requestPermission() {
         ) {
             RuntimePermissionScreen()
         }
-        else ShowContactsScreen()
+        else {
+            ShowContactsScreen()
+        }
     } else {
         ShowContactsScreen()
     }
