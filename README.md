@@ -19,3 +19,10 @@ Android Sample Code Project WorkSpace
 - ViewModel 과 Retrofit 을 Hilt 를 통해서 주입함
 - Flow State 를 통하여 UI 를 갱신하도록 함
 - Coroutine 을 통하여 Retrofit 통신함
+
+
+### 4. CoroutineContentProvider
+- Content Provider 를 MVVM 구조로 구현하되, Coroutine 으로 구현
+- MVVM : MainActivity > MainViewModel > ContactsRepository > ContactsDataSource
+- Compose Permission 구현
+
