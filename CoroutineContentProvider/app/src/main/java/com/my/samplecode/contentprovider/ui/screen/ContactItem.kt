@@ -7,6 +7,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
@@ -20,7 +21,7 @@ fun ContactItem(
     contact: Contact
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .padding(8.dp, 4.dp) //부모뷰로부트의 상하좌우 패딩
             .fillMaxWidth()
             .height(110.dp),
@@ -29,26 +30,35 @@ fun ContactItem(
     ) {
         Surface() {
             Row(
-                Modifier
+                modifier = Modifier
                     .padding(4.dp)
-                    .fillMaxSize()
+                    .fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
+                    modifier = Modifier
+                        .padding(10.dp, 10.dp)
+                        .size(60.dp)
+                        .fillMaxHeight(),
                     painter = rememberImagePainter(
-                        data = contact.image,
+                        data = contact.image ?: R.drawable.ic_photo,
                         builder = {
                             scale(coil.size.Scale.FILL)
                             placeholder(R.drawable.placeholder)
                             transformations(CircleCropTransformation())
                         }
                     ),
-                    contentDescription = "주소록",
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(0.2f)
+                    contentDescription = "주소록"
                 )
-                Text(text = contact.name)
-                Text(text = contact.number)
+                Text(
+                    modifier = Modifier
+                        .padding(10.dp, 10.dp),
+                    text = contact.name
+                )
+                Text(
+                    modifier = Modifier.padding(10.dp, 10.dp),
+                    text = contact.number
+                )
             }
         }
     }
