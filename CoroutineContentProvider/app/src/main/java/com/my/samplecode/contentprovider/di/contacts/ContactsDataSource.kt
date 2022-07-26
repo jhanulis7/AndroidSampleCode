@@ -19,7 +19,7 @@ class ContactsDataSource @Inject constructor(
 
     /**
      * Fetch contacts2
-     * 모든 종류의 주소록 테이블 아이템을 가져온다.
+     * 모든 종류(중복)의 주소록 테이블 아이템을 가져온다.
      * @return
      */
     @SuppressLint("Range")
@@ -71,7 +71,7 @@ class ContactsDataSource @Inject constructor(
     /**
      * Fetch contacts1
      * 리스트의 모두를 가져오지만(중복없음),전화번호를 가져올수가 없다, "data1" 이 없다고 함.
-     *  간단히, id, name 정도를 얻어올때 사용
+     * 간단히, id, name 정도를 얻어올때 사용
      * @return
      */
     @SuppressLint("Range")
@@ -81,10 +81,6 @@ class ContactsDataSource @Inject constructor(
         /**
          * ContentResolver
          * - 이 객체를 사용하여 클라이언트로서 제공자와 통신을 주고받음
-         * - ContentProvider 를 구현한 클래스의 인스턴스와 통신
-         * ContactsContract.Contacts.CONTENT_URI 와
-         * ContactsContract.Data.CONTENT_URI 차이가 뭘까
-         *
          */
         val cursor = contentResolver.query(
             ContactsContract.Contacts.CONTENT_URI, // 원하는 데이터를 가져올 주소
@@ -132,10 +128,6 @@ class ContactsDataSource @Inject constructor(
         /**
          * ContentResolver
          * - 이 객체를 사용하여 클라이언트로서 제공자와 통신을 주고받음
-         * - ContentProvider 를 구현한 클래스의 인스턴스와 통신
-         * ContactsContract.Contacts.CONTENT_URI 와
-         * ContactsContract.Data.CONTENT_URI 차이가 뭘까
-         *
          */
         val cursor = contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
