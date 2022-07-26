@@ -19,9 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.*
 import com.my.samplecode.contentprovider.ui.screen.ContactsScreen
 import com.my.samplecode.contentprovider.ui.theme.CoroutineContentProviderTheme
 import com.my.samplecode.contentprovider.vm.MainViewModel
@@ -46,9 +44,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    requestPermission()
-                    ContactsScreen(modifier = Modifier, viewModel = mainViewModel)
-                    mainViewModel.fetchContacts(Dispatchers.IO)
+                    requestPermission(mainViewModel)
+                    //ContactsScreen(modifier = Modifier, viewModel = mainViewModel)
+                    //mainViewModel.fetchContacts(Dispatchers.IO)
                 }
             }
         }
@@ -70,26 +68,26 @@ fun DefaultPreview() {
 }
 
 @Composable
-fun requestPermission() {
+fun requestPermission(mainViewModel: MainViewModel) {
     val context = LocalContext.current
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) !=
             PackageManager.PERMISSION_GRANTED
         ) {
-            RuntimePermissionScreen()
+            RuntimePermissionScreen(mainViewModel)
         }
         else {
-            ShowContactsScreen()
+            ShowContactsScreen(mainViewModel)
         }
     } else {
-        ShowContactsScreen()
+        ShowContactsScreen(mainViewModel)
     }
 }
 
 //Reference : https://towardsdev.com/jetpack-compose-runtime-permissions-erselan-khan-75f60800b28f
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun RuntimePermissionScreen() {
+fun RuntimePermissionScreen(mainViewModel: MainViewModel) {
     println("RuntimePermissionScreen()")
 
     val context = LocalContext.current
@@ -101,6 +99,13 @@ fun RuntimePermissionScreen() {
         } else {
             Toast.makeText(context, "READ_CONTACTS Permission Denied", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    //퍼미션 성공하고 나서 비지니스로직 화면 처리 
+    if (singlePermissionState.status.isGranted) {
+        Toast.makeText(context, "READ_CONTACTS Permission isGranted true!!!!!!", Toast.LENGTH_SHORT).show()
+        ShowContactsScreen(mainViewModel)
+        return
     }
 
     val multiplePermissionsState = rememberMultiplePermissionsState(
@@ -135,6 +140,7 @@ fun RuntimePermissionScreen() {
 }
 
 @Composable
-fun ShowContactsScreen() {
-    Text(text = "ShowContactsScreen")
+fun ShowContactsScreen(mainViewModel: MainViewModel) {
+    ContactsScreen(modifier = Modifier, viewModel = mainViewModel)
+    mainViewModel.fetchContacts(Dispatchers.IO)
 }
