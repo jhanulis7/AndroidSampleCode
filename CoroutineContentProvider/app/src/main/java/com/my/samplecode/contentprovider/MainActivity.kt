@@ -72,6 +72,14 @@ fun requestPermission(mainViewModel: MainViewModel) {
     val context = LocalContext.current
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) !=
+            PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) !=
+            PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) !=
+            PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) !=
+            PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_MMS) !=
             PackageManager.PERMISSION_GRANTED
         ) {
             RuntimePermissionScreen(mainViewModel)
@@ -101,23 +109,34 @@ fun RuntimePermissionScreen(mainViewModel: MainViewModel) {
         }
     }
 
-    //퍼미션 성공하고 나서 비지니스로직 화면 처리 
-    if (singlePermissionState.status.isGranted) {
-        Toast.makeText(context, "READ_CONTACTS Permission isGranted true!!!!!!", Toast.LENGTH_SHORT).show()
-        ShowContactsScreen(mainViewModel)
-        return
-    }
-
     val multiplePermissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_SMS,
+            Manifest.permission.RECEIVE_SMS,
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.RECEIVE_MMS,
         )
     ) { permissionStateMap ->
         if (!permissionStateMap.containsValue(false)) {
             Toast.makeText(context, "Location Permissions Granted", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //퍼미션 성공하고 나서 비지니스로직 화면 처리
+    if (singlePermissionState.status.isGranted) {
+        Toast.makeText(context, "READ_CONTACTS Permission isGranted true!!!!!!", Toast.LENGTH_SHORT).show()
+
+        var permissionCount = 0
+        multiplePermissionsState.permissions.forEach { item ->
+            if (item.status.isGranted) permissionCount++
+        }
+        if (permissionCount == multiplePermissionsState.permissions.size) {
+            ShowContactsScreen(mainViewModel)
+            return
         }
     }
 
@@ -143,4 +162,6 @@ fun RuntimePermissionScreen(mainViewModel: MainViewModel) {
 fun ShowContactsScreen(mainViewModel: MainViewModel) {
     ContactsScreen(modifier = Modifier, viewModel = mainViewModel)
     mainViewModel.fetchContacts(Dispatchers.IO)
+    //mainViewModel.fetchBtContacts(Dispatchers.IO)
+    mainViewModel.fetchMessages(Dispatchers.IO)
 }

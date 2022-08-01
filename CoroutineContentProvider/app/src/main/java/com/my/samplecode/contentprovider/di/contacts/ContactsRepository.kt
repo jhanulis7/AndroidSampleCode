@@ -6,7 +6,8 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ContactsRepository @Inject constructor(
-    private val source: ContactsDataSource
+    private val source: ContactsDataSource,
+    private val sourceBt: ContactsBtDataSource
 ) {
     private fun <T>println(msg: T) = kotlin.io.println("[${Thread.currentThread().name}] $msg")
 
@@ -15,5 +16,11 @@ class ContactsRepository @Inject constructor(
         withContext(dispatcher) {
             println("ContactsRepository:fetchContacts")
             source.fetchContacts()
+        }
+
+    suspend fun fetchBtContacts(dispatcher: CoroutineDispatcher): List<Contact> =
+        withContext(dispatcher) {
+            println("ContactsRepository:fetchBtContacts")
+            sourceBt.fetchContacts()
         }
 }

@@ -128,6 +128,7 @@ class ContactsDataSource @Inject constructor(
         /**
          * ContentResolver
          * - 이 객체를 사용하여 클라이언트로서 제공자와 통신을 주고받음
+         * - Tablet S6: URI: content://com.samsung.android.scs.ai.search/v1/contacts
          */
         val cursor = contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
