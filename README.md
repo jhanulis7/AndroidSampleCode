@@ -29,3 +29,11 @@ Android Sample Code Project WorkSpace
        [ref2 link](https://velog.io/@cchloe2311/%EC%95%88%EB%93%9C%EB%A1%9C%EC%9D%B4%EB%93%9C-ContentProvider)
        [permission link](https://google.github.io/accompanist/permissions/)
 
+### 5. Kakao Login
+- 카카오 로그인을 Compose 로 구현해보기
+- Kakao LogIn/Out/State + Coroutine + Flow + ViewModel + Compose
+- Kakao LogIn Sdk : https://developers.kakao.com/docs/latest/ko/kakaologin/android#logout
+- Kakao App key 받기 및 소스에서 키 숨기기
+- ViewModel 에서 mutableStateFlow 로 로그인 상태를 Observe 받은 뒤, Compose 에서 collectAsState 를 통해서 State(MutableState)로 상태관리
+- Hilt 는 구지 안쓰고 컨텍스트를 받기 위해서 , viewModel to AndroidViewModel 사용
+- ref: [정대리 유튜브](https://www.youtube.com/watch?v=LV0pcMuBUKI&list=PLgOlaPUIbynpFHXeEORmvIOoiNVgSsWeq&index=29)
