@@ -37,3 +37,8 @@ Android Sample Code Project WorkSpace
 - ViewModel 에서 mutableStateFlow 로 로그인 상태를 Observe 받은 뒤, Compose 에서 collectAsState 를 통해서 State(MutableState)로 상태관리
 - Hilt 는 구지 안쓰고 컨텍스트를 받기 위해서 , viewModel to AndroidViewModel 사용
 - ref: [정대리 유튜브](https://www.youtube.com/watch?v=LV0pcMuBUKI&list=PLgOlaPUIbynpFHXeEORmvIOoiNVgSsWeq&index=29)
+
+## Compose SampleCode
+## 6. ComposeBasic
+- [codelab](https://developer.android.com/courses/pathways/compose#article-https://developer.android.com/jetpack/compose/tutorial)
+- 기본적인 Surface, Row, Column, LazyColumn, State, animation 을 사용해본다.
