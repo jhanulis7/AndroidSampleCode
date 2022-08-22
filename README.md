@@ -42,3 +42,8 @@ Android Sample Code Project WorkSpace
 ### 6. ComposeBasic
 - [codelab](https://developer.android.com/courses/pathways/compose#article-https://developer.android.com/jetpack/compose/tutorial)
 - 기본적인 Surface, Row, Column, LazyColumn, State, animation 을 사용해본다.
+
+
+### 7. ExoPlayer + Compose
+- [ExoPlayer](https://github.com/google/ExoPlayer)
+- [ExoPlayer vs MediaPlayer](https://medium.com/@wodbs135/android-exoplayer-part1-1749317ef1f1)
