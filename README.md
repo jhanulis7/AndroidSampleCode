@@ -43,7 +43,7 @@ Android Sample Code Project WorkSpace
 - [codelab](https://developer.android.com/courses/pathways/compose#article-https://developer.android.com/jetpack/compose/tutorial)
 - 기본적인 Surface, Row, Column, LazyColumn, State, animation 을 사용해본다.
 
-### 7. Compose Basic Layout
+### 7. BasicLayoutsCodelab
 - [codelab](https://developer.android.com/courses/pathways/compose#article-https://developer.android.com/jetpack/compose/tutorial)
 - codelab 에서 제공되는 디자인되로, 컴포즈로 구현해본다.
 
