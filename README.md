@@ -50,3 +50,9 @@ Android Sample Code Project WorkSpace
 ### 8. ExoPlayer + Compose
 - [ExoPlayer](https://github.com/google/ExoPlayer)
 - [ExoPlayer vs MediaPlayer](https://medium.com/@wodbs135/android-exoplayer-part1-1749317ef1f1)
+
+### 9. Button Ripple Effect + Compose
+- [Reference Code](https://blog.canopas.com/jetpack-compose-cool-button-click-effects-c6bbecec7bcb)
+- [Compose Animation](https://developer.android.com/jetpack/compose/animation?hl=ko)
+- Pulsate / Bounce / Shake / Shape Change / No Ripple 효과
+- Modifier Button 효과 Component 제공
