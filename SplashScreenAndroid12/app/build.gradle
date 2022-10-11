@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.my.samplecode.splashscreenandroid12"
         minSdk 21
-        targetSdk 32
+        targetSdk 31
         versionCode 1
         versionName "1.0"
 
@@ -61,5 +61,12 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
 
+    def splashScreenVersion = "1.0.0"
+    // Use: def instead of val if you are not using Kotlin Gradle(.kts)
 
+    // [Splash screens](https://developer.android.com/develop/ui/views/launch/splash-screen)
+    // [Splash reference](https://developersancho.medium.com/jetpack-compose-splash-screen-api-36ca40c6196b)
+    // [Splash reference](https://proandroiddev.com/splash-screen-in-android-3bd9552b92a5#5483)
+
+    implementation("androidx.core:core-splashscreen:$splashScreenVersion")
 }
