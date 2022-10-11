@@ -65,6 +65,8 @@ fun Greeting(name: String) {
         ShakeEffect("Shake")
         Spacer(modifier = Modifier.padding(top = 20.dp))
         ShapeEffect("Shape")
+        Spacer(modifier = Modifier.padding(top = 20.dp))
+        NoRippleEffect(name = "Button without Ripple Effect")
     }
 }
 
@@ -140,5 +142,19 @@ fun ShapeEffect(name: String) {
             color = Color.White,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun NoRippleEffect(name: String) {
+    Button(
+        onClick = {
+            //Clicked
+        },
+        interactionSource = remember { NoRippleInteractionSource() },
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(16.dp),
+    ) {
+        Text(text = name)
     }
 }
