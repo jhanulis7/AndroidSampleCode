@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">EdithPttButton</string>
+
+    <string-array name="vr_menu_array">
+        <item>초기화1</item>
+        <item>초기화2</item>
+        <item>초기화3</item>
+        <item>초기화4</item>
+        <item>초기화5</item>
+    </string-array>
+
+    <!--    EdithTestMenu 순서와 동일하게..  -->
+    <string-array name="test_menu_array">
+        <item>VR 시스템약관동의</item>
+        <item>BargeIn 설정 변경</item>
+        <item>현재배터리</item>
+        <item>남은주행거리</item>
+        <item>배터리부족(안전운행중)</item>
+        <item>목적지 배터리부족</item>
+        <item>목적지 예상배터리부족</item>
+    </string-array>
+
+    <string-array name="test_menu_desc_array">
+        <item>VR 시스템약관동의를 강제 설정하고, 선택시마다 토글됩니다.</item>
+        <item>BargeIn 설정 변경합니다. 선택시마다 토글됩니다.</item>
+        <item>현재배터리를 14.2%로 설정합니다.</item>
+        <item>남은주행거리를 10km로 설정합니다.</item>
+        <item>배터리부족(안전운행중)으로 설정합니다.</item>
+        <item>목적지 배터리부족상태로 설정합니다.</item>
+        <item>목적지 예상 배터리부족상태로 설정합니다.</item>
+    </string-array>
+</resources>
