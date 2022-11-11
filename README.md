@@ -61,3 +61,7 @@ Android Sample Code Project WorkSpace
 ### 10. EdithPttButton
 - Service 연동 
 - Service 에서 Compose 로 뷰 그리기(윈도우 최상위)
+
+### 11. AlgorithmMatrial3
+- LazyColumn 이용하여 알고리즘 퀴즈 풀기
+- HILT 적용
