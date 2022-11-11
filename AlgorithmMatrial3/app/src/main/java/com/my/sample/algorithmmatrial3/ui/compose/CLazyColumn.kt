@@ -20,23 +20,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.my.sample.algorithmmatrial3.ui.manager.QuizManager
 
 
 @Composable
 fun CLazyColumn(
     modifier: Modifier = Modifier,
-    titleList: List<String>,
+    map: Map<String, String>,
     clickEvent: (index: Int) -> Unit
 ) {
-
     LazyColumn(modifier = modifier) {
-        itemsIndexed(titleList) { index , item ->
+        itemsIndexed(map.keys.toList()) { index , key ->
             CLazyColumnAdapter(
-                modifier = modifier,
                 index = index,
-                title = item,
+                title = key,
+                subTitle = map[key] ?: "",
                 clickEvent = { clickEvent.invoke(index) }
             )
         }
@@ -45,10 +46,9 @@ fun CLazyColumn(
 
 @Composable
 fun CLazyColumnAdapter(
-    modifier: Modifier = Modifier,
     index: Int,
     title: String,
-    subTit
+    subTitle: String,
     clickEvent: () -> Unit
 ) {
     Card(
@@ -92,8 +92,8 @@ fun CLazyColumnAdapter(
                     overflow = TextOverflow.Ellipsis //텍스트 오버플로
                 )
                 Text(
-                    text = description,
-                    style = MaterialTheme.typography.body2,
+                    text = subTitle,
+                    style = MaterialTheme.typography.bodySmall,
                     fontSize = 10.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -101,4 +101,11 @@ fun CLazyColumnAdapter(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun PreviewCLazyColumn() {
+    val quizManager = QuizManager()
+    CLazyColumn(map = quizManager.getMap(), clickEvent = {})
 }
