@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">AppStoreSample</string>
+    <string name="downloading">Downloading…</string>
+    <string name="title_file_download">APK is downloading</string>
+    <string name="storage_access_required">Storage write-access is required to downloading the file.</string>
+    <string name="storage_access_read_required">Storage read-access is required to downloading the file.</string>
+    <string name="storage_permission_denied">Storage permission request was denied.</string>
+    <string name="ok">OK</string>
+
+    <string name="str_msg_permission_attach">애플리케이션>앱 권한 메뉴로 이동 하여 필요한 권한을 허용 으로 설정해 주세요.</string>
+    <string name="confirm_button_text">확인</string>
+
+</resources>

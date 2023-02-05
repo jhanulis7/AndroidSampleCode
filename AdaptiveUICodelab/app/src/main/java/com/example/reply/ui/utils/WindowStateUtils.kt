@@ -16,7 +16,11 @@
 
 package com.example.reply.ui.utils
 
+import android.app.Activity
 import android.graphics.Rect
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.window.layout.FoldingFeature
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -50,6 +54,8 @@ fun isSeparating(foldFeature: FoldingFeature?): Boolean {
     return foldFeature?.state == FoldingFeature.State.FLAT && foldFeature.isSeparating
 }
 
+
+
 /**
  * Different type of navigation supported by app depending on size and state.
  */
@@ -62,4 +68,15 @@ enum class ReplyNavigationType {
  */
 enum class ReplyContentType {
     LIST_ONLY, LIST_AND_DETAIL
+}
+
+enum class WindowSize {
+    COMPACT, MEDIUM, EXPANDED
+}
+
+fun getWindowSizeClass(windowDpSize: DpSize): WindowSize = when {
+    windowDpSize.width < 0.dp -> throw IllegalArgumentException("Dp value cannot be negative")
+    windowDpSize.width < 600.dp -> WindowSize.COMPACT
+    windowDpSize.width < 840.dp -> WindowSize.MEDIUM
+    else -> WindowSize.EXPANDED
 }

@@ -16,15 +16,19 @@
 
 package com.example.reply.ui
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.reply.data.local.LocalEmailsDataProvider
 import com.example.reply.ui.theme.ReplyTheme
+import com.example.reply.ui.utils.WindowSize
+import com.example.reply.ui.utils.getWindowSizeClass
 
 class MainActivity : ComponentActivity() {
 
