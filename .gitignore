@@ -83,3 +83,10 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+#App signing
+keystore.properties
+platform.jks
+# IntelliJ
+*.iml
+.idea/
