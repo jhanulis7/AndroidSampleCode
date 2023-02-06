@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Download Sample Test\"") {
+                    Greeting("Download Sample Test") {
                         requestPermission()
                     }
                 }
@@ -141,7 +141,7 @@ fun Greeting(name: String, onCheckStoragePermission: () -> Unit) {
         Text(text = "Hello $name!")
 
         Button(onClick = { onCheckStoragePermission() }) {
-            
+            Text("Apk Download 실행")
         }
     }
 }
