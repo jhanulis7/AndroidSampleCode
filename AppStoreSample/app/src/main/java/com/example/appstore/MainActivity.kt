@@ -1,6 +1,7 @@
 package com.example.appstore
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,24 +10,50 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.example.appstore.ui.theme.AppStoreSampleTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 //reference : https://androidwave.com/download-and-install-apk-programmatically/
 //https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/
 class MainActivity : ComponentActivity() {
+    private val requestInstallerActivity = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()  // ◀ StartActivityForResult 처리를 담당
+    ) {
+        Log.d("MainActivity", "resultCode : ${it.resultCode} ${Activity.RESULT_OK}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (packageManager.canRequestPackageInstalls()) {
+                Log.d("MainActivity", "canRequestPackageInstalls success")
+                downloadController.assetInstallApk()
+            }
+        } else {
+            Log.d("MainActivity", "canRequestPackageInstalls fail")
+            downloadController.assetInstallApk()
+        }
+    }
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -43,17 +70,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-    companion object {
-        const val PERMISSION_REQUEST_STORAGE = 0
-    }
     lateinit var downloadController: DownloadController
+    private val _isCopyComplete = MutableStateFlow(false)
+    private val isCopyComplete = _isCopyComplete.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // This apk is taking pagination sample app
-        val apkUrl = "https://edith-android.s3.ap-northeast-2.amazonaws.com/EdithAgentTsd.apk?versionId=imI5n4juuxlbv_xPQHpdnGT0Yl0L2blQ"
-        downloadController = DownloadController(this, apkUrl)
+
+        initServerDownload()
+        initAssetCopyToApp()
 
         setContent {
             AppStoreSampleTheme {
@@ -62,8 +87,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Download Sample Test") {
-                        requestPermission()
+                    InstallApkScreen("Download Sample Test", isCopyComplete) { installType ->
+                        requestPermission(installType)
                     }
                 }
             }
@@ -108,7 +133,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun requestPermission() {
+    private fun requestPermission(installType: String) {
         var doNotAskAgain = false
         //		\n\n- 위치\n- 전화\n- 저장\n
         var needPermissions = ""
@@ -129,19 +154,116 @@ class MainActivity : ComponentActivity() {
         if (message.isNotEmpty()) {
             showPermissionDialog(message, doNotAskAgain)
         } else {
-            downloadController.enqueueDownload()
+            val permissions = java.util.ArrayList<String>()
+
+            when(installType) {
+                "download" -> {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        downloadController.enqueueDownload()
+
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_LONG)
+                                .show()
+                        }
+                    }
+                }
+                "asset" -> {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        //downloadController.assetInstallApk()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            if (packageManager.canRequestPackageInstalls()) {
+                                downloadController.assetInstallApk()
+                            } else {
+                                getInstallApp()
+                            }
+                        } else {
+                            getInstallApp()
+                        }
+                    }
+                }
+                else -> error("unknown install type")
+            }
+        }
+    }
+
+    private fun initServerDownload() {
+        //starbucks sample apk
+        val apkUrl = "https://d.apkpure.com/b/APK/com.starbucks.co?version=latest"
+        downloadController = DownloadController(this, apkUrl)
+    }
+    private fun initAssetCopyToApp() {
+        //for asset installer
+        val outPath= filesDir.absolutePath + "/app.apk"
+        CoroutineScope(Dispatchers.IO).launch {
+            if (!File(outPath).exists()) {
+                copyApkToAppFolder(outPath) {
+                    _isCopyComplete.value = true
+                }
+            } else {
+                _isCopyComplete.value = true
+            }
+        }
+        Toast.makeText(this@MainActivity, getString(R.string.copy_asset_to_file), Toast.LENGTH_LONG)
+            .show()
+    }
+
+    private fun copyApkToAppFolder(outPath: String, onComplete: () -> Unit) {
+        val inputStream = assets.open("app.apk")
+        Log.d("Installer", "copyApkToAppFolder() outPath:$outPath")
+
+        val outputStream = FileOutputStream(outPath)
+        while (true) {
+            val data = inputStream.read()
+            if (data == -1) {
+                break
+            }
+            outputStream.write(data)
+        }
+        inputStream.close()
+        outputStream.close()
+        onComplete()
+    }
+
+    //TODO [안드로이드 8.0 이상 출처를 알수 없는 앱 설치 허용 설정창 이동 메소드]
+    fun getInstallApp() {
+        // 안드로이드 8.0 이상 출처를 알 수 없는 앱 설정 화면 이동
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
+            intent.data = Uri.parse("package:$packageName");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+            //startActivity(intent)
+            requestInstallerActivity.launch(intent)
         }
     }
 
 }
 
 @Composable
-fun Greeting(name: String, onCheckStoragePermission: () -> Unit) {
-    Column() {
-        Text(text = "Hello $name!")
+fun InstallApkScreen(
+    name: String,
+    downloadState: StateFlow<Boolean> ,
+    onButtonCallback: (String) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-        Button(onClick = { onCheckStoragePermission() }) {
-            Text("Apk Download 실행")
+        val enableState by downloadState.collectAsState()
+        Text(text = "Hello $name!", style = MaterialTheme.typography.h1)
+
+        Spacer(modifier = Modifier.padding(20.dp))
+
+        //server 에서 download 받아서 앱 설치 실행
+        Button(onClick = { onButtonCallback("download") }) {
+            Text("Server 에서 Apk Download 받아서 설치 실행")
+        }
+
+        Spacer(modifier = Modifier.padding(20.dp))
+
+        //asset 을 app file 로 copy 해서 앱 설치 실행
+        Button(onClick = { onButtonCallback("asset") }, enabled = enableState) {
+            Text("Asset 에서 Apk Download 받아서 설치 실행")
         }
     }
 }
@@ -149,7 +271,10 @@ fun Greeting(name: String, onCheckStoragePermission: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
+    val _isCopyComplete = MutableStateFlow(false)
+    val isCopyComplete = _isCopyComplete.asStateFlow()
+
     AppStoreSampleTheme {
-        Greeting("Download Sample Test") {}
+        InstallApkScreen("Download Sample Test", isCopyComplete) {}
     }
 }

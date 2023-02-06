@@ -8,9 +8,14 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 
 class DownloadController(
     private val context: Context,
@@ -42,8 +47,6 @@ class DownloadController(
         showInstallOption(destination, uri)
         // Enqueue a new download and same the referenceId
         downloadManager.enqueue(request)
-        Toast.makeText(context, context.getString(R.string.downloading), Toast.LENGTH_LONG)
-            .show()
     }
     private fun showInstallOption(
         destination: String,
@@ -83,5 +86,26 @@ class DownloadController(
             }
         }
         context.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+    }
+
+    fun assetInstallApk() {
+        val apkPath= context.filesDir.absolutePath + "/app.apk"
+        val apkUri =
+            FileProvider.getUriForFile(context,
+                BuildConfig.APPLICATION_ID + ".provider", File(apkPath))
+
+        Log.d("Installer", "assetInstallApk() apkPath:$apkPath, contentUri:$apkUri ")
+
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
+        context.startActivity(intent)
+    }
+
+    fun uninstallApp() {
+        val packageURI = Uri.parse("package:com.komorebi.memo")
+        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageURI)
+        context.startActivity(uninstallIntent)
     }
 }
