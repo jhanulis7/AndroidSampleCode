@@ -20,7 +20,48 @@ android {
         }
     }
 
+    println "****** Starting signingConfigs task!"
+    def keystorePropertiesFile = rootProject.file("./keystore.properties")
+    def keystoreProperties = new Properties()
+    def releaseKeyExists = false
+    def debugKeyExists = false
+    def keyStorePropertyExist = keystorePropertiesFile.exists()
+    if (keyStorePropertyExist) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+        releaseKeyExists = file(keystoreProperties['storeFile']).exists()
+        debugKeyExists = file(keystoreProperties['debugStoreFile']).exists()
+    }
+
+    println "****** keyStorePropertyExists? $keyStorePropertyExist"
+    println "****** releaseKeyExists? $releaseKeyExists"
+    println "****** debugKeyExists? $debugKeyExists"
+
+    signingConfigs {
+        release {
+            println "signingConfigs  storeFile!"
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+
+        debug {
+            if (debugKeyExists) {
+                println "signingConfigs  debugStoreFile!"
+                storeFile file(keystoreProperties['debugStoreFile'])
+                storePassword keystoreProperties['debugStorePassword']
+                keyAlias keystoreProperties['debugKeyAlias']
+                keyPassword keystoreProperties['debugKeyPassword']
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

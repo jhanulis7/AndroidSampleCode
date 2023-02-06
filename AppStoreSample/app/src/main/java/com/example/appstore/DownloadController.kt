@@ -17,7 +17,7 @@ class DownloadController(
     private val url: String
 ) {
     companion object {
-        private const val FILE_NAME = "SampleDownloadApp.apk"
+        private const val FILE_NAME = "SampleDownloadApp2.apk"
         private const val FILE_BASE_PATH = "file://"
         private const val MIME_TYPE = "application/vnd.android.package-archive"
         private const val PROVIDER_PATH = ".provider"

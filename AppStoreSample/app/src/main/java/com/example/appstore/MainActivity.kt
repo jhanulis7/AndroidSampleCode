@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat
 import com.example.appstore.ui.theme.AppStoreSampleTheme
 
 //reference : https://androidwave.com/download-and-install-apk-programmatically/
+//https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/
 class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // This apk is taking pagination sample app
-        val apkUrl = "APK Download URL"
+        val apkUrl = "https://edith-android.s3.ap-northeast-2.amazonaws.com/EdithAgentTsd.apk?versionId=imI5n4juuxlbv_xPQHpdnGT0Yl0L2blQ"
         downloadController = DownloadController(this, apkUrl)
 
         setContent {
