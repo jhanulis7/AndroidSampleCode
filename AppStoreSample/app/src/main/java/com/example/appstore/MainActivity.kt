@@ -22,6 +22,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,10 @@ import java.io.FileOutputStream
 //reference : https://androidwave.com/download-and-install-apk-programmatically/
 //https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/
 class MainActivity : ComponentActivity() {
+    private lateinit var downloadController: DownloadController
+    private val _isCopyComplete = MutableStateFlow(false)
+    private val isCopyComplete = _isCopyComplete.asStateFlow()
+    
     private val requestInstallerActivity = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()  // ◀ StartActivityForResult 처리를 담당
     ) {
@@ -70,10 +75,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    lateinit var downloadController: DownloadController
-    private val _isCopyComplete = MutableStateFlow(false)
-    private val isCopyComplete = _isCopyComplete.asStateFlow()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -87,7 +88,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    InstallApkScreen("Download Sample Test", isCopyComplete) { installType ->
+                    InstallApkScreen(getString(R.string.appstore), isCopyComplete) { installType ->
                         requestPermission(installType)
                     }
                 }
@@ -250,7 +251,7 @@ fun InstallApkScreen(
     ) {
 
         val enableState by downloadState.collectAsState()
-        Text(text = "Hello $name!", style = MaterialTheme.typography.h1)
+        Text(text = "$name Test!", style = MaterialTheme.typography.h2)
 
         Spacer(modifier = Modifier.padding(20.dp))
 
@@ -275,6 +276,6 @@ fun DefaultPreview() {
     val isCopyComplete = _isCopyComplete.asStateFlow()
 
     AppStoreSampleTheme {
-        InstallApkScreen("Download Sample Test", isCopyComplete) {}
+        InstallApkScreen(stringResource(id = R.string.appstore), isCopyComplete) {}
     }
 }

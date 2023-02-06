@@ -65,3 +65,9 @@ Android Sample Code Project WorkSpace
 ### 11. AlgorithmMatrial3
 - LazyColumn 이용하여 알고리즘 퀴즈 풀기
 - HILT 적용
+
+### 12. AppStoreSample
+- AppStore 역할을 하는 앱
+- 서버에서 다운로드 하여 앱 설치 / asset file 을 읽어서 앱 설치
+- [reference server code](https://androidwave.com/download-and-install-apk-programmatically/)
+- [reference asset code](https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/)
