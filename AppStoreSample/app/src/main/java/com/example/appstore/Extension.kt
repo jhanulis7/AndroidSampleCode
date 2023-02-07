@@ -1,8 +1,7 @@
 package com.example.appstore
 
-import android.view.View
+import android.os.Build
 import androidx.activity.ComponentActivity
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 
 fun ComponentActivity.checkSelfPermissionCompat(permission: String) =
@@ -15,3 +14,8 @@ fun ComponentActivity.requestPermissionsCompat(
 ) {
     ActivityCompat.requestPermissions(this, permissionsArray, requestCode)
 }
+
+
+fun isQCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+fun isRCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+fun isSCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S

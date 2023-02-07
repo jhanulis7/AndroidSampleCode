@@ -1,21 +1,30 @@
 package com.example.appstore
 
+import android.annotation.SuppressLint
 import android.app.DownloadManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageInstaller
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 
 class DownloadController(
     private val context: Context,
@@ -88,22 +97,69 @@ class DownloadController(
         context.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
-    fun assetInstallApk() {
-        val apkPath= context.filesDir.absolutePath + "/app.apk"
-        val apkUri =
-            FileProvider.getUriForFile(context,
-                BuildConfig.APPLICATION_ID + ".provider", File(apkPath))
+    fun installAssetApk() {
+        val path = context.filesDir.absolutePath + "/app.apk"
+        val file = File(path)
+        if (!file.exists()) {
+            Log.e("AppStoreSample", " There is no file:$path")
+            Toast.makeText(context, "There is no file!!", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        Log.d("Installer", "assetInstallApk() apkPath:$apkPath, contentUri:$apkUri ")
+        val uri = FileProvider.getUriForFile(
+            context,
+            BuildConfig.APPLICATION_ID + ".provider",
+            file
+        )
 
-        val intent = Intent(Intent.ACTION_VIEW)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
-        context.startActivity(intent)
+        Log.d("AppStoreSample", "installAssetApk() path:$path, uri:$uri")
+        Intent(Intent.ACTION_VIEW).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            setDataAndType(uri, "application/vnd.android.package-archive")
+        }.run {
+            context.startActivity(this)
+        }
     }
 
-    fun uninstallApp() {
+    fun installApkNoUnknownSource(inputStream: InputStream, onComplete: () -> Unit) = CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val installer = context.packageManager.packageInstaller
+            val params =
+                PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+            val sessionId = installer.createSession(params)
+            val session = installer.openSession(sessionId)
+
+            val out = session.openWrite("COSU", 0, -1)
+            val buffer = ByteArray(65536)
+            do {
+                val c = inputStream.read(buffer)
+                Log.d("AppStore", "read: $c")
+                if (c == -1) break
+                out.write(buffer, 0, c)
+            } while (true)
+            session.fsync(out)
+            //inputStream.close()
+            onComplete.invoke()
+            out.close()
+            val p: PendingIntent = PendingIntent.getBroadcast(
+                context,
+                0,
+                Intent(),
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            session.commit(p.intentSender)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    fun uninstallServerDownloadApp() {
+        val packageURI = Uri.parse("package:com.starbucks.co")
+        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageURI)
+        context.startActivity(uninstallIntent)
+    }
+
+    fun uninstallAssetADownloadApp() {
         val packageURI = Uri.parse("package:com.komorebi.memo")
         val uninstallIntent = Intent(Intent.ACTION_DELETE, packageURI)
         context.startActivity(uninstallIntent)

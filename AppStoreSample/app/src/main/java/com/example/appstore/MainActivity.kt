@@ -1,7 +1,6 @@
 package com.example.appstore
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -23,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -44,21 +43,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var downloadController: DownloadController
     private val _isCopyComplete = MutableStateFlow(false)
     private val isCopyComplete = _isCopyComplete.asStateFlow()
-    
-    private val requestInstallerActivity = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()  // ◀ StartActivityForResult 처리를 담당
-    ) {
-        Log.d("MainActivity", "resultCode : ${it.resultCode} ${Activity.RESULT_OK}")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (packageManager.canRequestPackageInstalls()) {
-                Log.d("MainActivity", "canRequestPackageInstalls success")
-                downloadController.assetInstallApk()
-            }
-        } else {
-            Log.d("MainActivity", "canRequestPackageInstalls fail")
-            downloadController.assetInstallApk()
-        }
-    }
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -75,6 +60,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val packageInstallerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (isQCompatibility()) {
+            if (packageManager.canRequestPackageInstalls()) {
+                Log.d("AppStoreSample", "canRequestPackageInstalls success")
+                Toast.makeText(this, "Unknown App Source granted!!", Toast.LENGTH_SHORT).show()
+                downloadController.installAssetApk()
+            }
+        }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -155,35 +152,37 @@ class MainActivity : ComponentActivity() {
         if (message.isNotEmpty()) {
             showPermissionDialog(message, doNotAskAgain)
         } else {
-            val permissions = java.util.ArrayList<String>()
+            runButtonTest(installType)
+        }
+    }
+    
+    private fun runButtonTest(installType: String) {
+        when(installType) {
+            "download" -> {
+                CoroutineScope(Dispatchers.IO).launch {
+                    downloadController.enqueueDownload()
 
-            when(installType) {
-                "download" -> {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        downloadController.enqueueDownload()
-
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_LONG)
-                                .show()
-                        }
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_LONG)
+                            .show()
                     }
                 }
-                "asset" -> {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        //downloadController.assetInstallApk()
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            if (packageManager.canRequestPackageInstalls()) {
-                                downloadController.assetInstallApk()
-                            } else {
-                                getInstallApp()
-                            }
-                        } else {
-                            getInstallApp()
-                        }
-                    }
-                }
-                else -> error("unknown install type")
             }
+            "asset" -> {
+                if (isQCompatibility()) {
+                    requestUnknownAppSource()
+                }
+            }
+            "PackageInstaller" -> {
+                requestNoUnknownSource()
+            }
+            "UnInstall Starbucks" -> {
+                requestUnInstallStarbucks()
+            }
+            "UnInstall Memo" -> {
+                requestUnInstallMemo()
+            }
+            else -> error("unknown install type")
         }
     }
 
@@ -195,22 +194,23 @@ class MainActivity : ComponentActivity() {
     private fun initAssetCopyToApp() {
         //for asset installer
         val outPath= filesDir.absolutePath + "/app.apk"
-        CoroutineScope(Dispatchers.IO).launch {
-            if (!File(outPath).exists()) {
+
+        if (!File(outPath).exists()) {
+            Toast.makeText(this@MainActivity, getString(R.string.copy_asset_to_file), Toast.LENGTH_LONG)
+                .show()
+            CoroutineScope(Dispatchers.IO).launch {
                 copyApkToAppFolder(outPath) {
                     _isCopyComplete.value = true
                 }
-            } else {
-                _isCopyComplete.value = true
             }
+        } else {
+            _isCopyComplete.value = true
         }
-        Toast.makeText(this@MainActivity, getString(R.string.copy_asset_to_file), Toast.LENGTH_LONG)
-            .show()
     }
 
     private fun copyApkToAppFolder(outPath: String, onComplete: () -> Unit) {
         val inputStream = assets.open("app.apk")
-        Log.d("Installer", "copyApkToAppFolder() outPath:$outPath")
+        Log.d("AppStoreSample", "copyApkToAppFolder() outPath:$outPath")
 
         val outputStream = FileOutputStream(outPath)
         while (true) {
@@ -225,18 +225,43 @@ class MainActivity : ComponentActivity() {
         onComplete()
     }
 
-    //TODO [안드로이드 8.0 이상 출처를 알수 없는 앱 설치 허용 설정창 이동 메소드]
-    fun getInstallApp() {
-        // 안드로이드 8.0 이상 출처를 알 수 없는 앱 설정 화면 이동
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
-            intent.data = Uri.parse("package:$packageName");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            //startActivity(intent)
-            requestInstallerActivity.launch(intent)
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun requestUnknownAppSource() {
+        if (packageManager.canRequestPackageInstalls()) {
+            Log.e("AppStoreSample", "Already UnKnown App Source")
+            Toast.makeText(this, "Already UnKnown App Source", Toast.LENGTH_SHORT).show()
+            //이미 permission 있으면, install 로직 구현
+            downloadController.installAssetApk()
+            return
+        }
+
+        //permission 필요 하면, 퍼미션 설정 화면 요청
+        //setData 를 하지 않으면, unknown app 관련 요청 앱들 리스트가 보인 상태에서 해당 패키지앱 선택하도록 하고,
+        //package 전달 하면 해당앱을 선택 하여 스위치 버튼이 나오는 설정앱이 나옴
+        //설정이 끝나면, packageInstallerLauncher 에서 다시 한번 canRequestPackageInstalls 확인 하여 다음 액션을 취함
+        Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+            .setData(
+                Uri.parse("package:$packageName")
+            ).run {
+                packageInstallerLauncher.launch(this)
+            }
+    }
+
+    private fun requestNoUnknownSource() {
+        val inputStream = assets.open("app.apk")
+        downloadController.installApkNoUnknownSource(inputStream) {
+            inputStream.close()
         }
     }
 
+    private fun requestUnInstallMemo() {
+        downloadController.uninstallAssetADownloadApp()
+
+    }
+
+    private fun requestUnInstallStarbucks() {
+        downloadController.uninstallServerDownloadApp()
+    }
 }
 
 @Composable
@@ -257,14 +282,35 @@ fun InstallApkScreen(
 
         //server 에서 download 받아서 앱 설치 실행
         Button(onClick = { onButtonCallback("download") }) {
-            Text("Server 에서 Apk Download 받아서 설치 실행")
+            Text("Install from Server")
         }
 
-        Spacer(modifier = Modifier.padding(20.dp))
+        Spacer(modifier = Modifier.padding(10.dp))
 
         //asset 을 app file 로 copy 해서 앱 설치 실행
         Button(onClick = { onButtonCallback("asset") }, enabled = enableState) {
-            Text("Asset 에서 Apk Download 받아서 설치 실행")
+            Text("Install from Asset")
+        }
+
+        Spacer(modifier = Modifier.padding(10.dp))
+
+        //asset 을 app file 로 copy 해서 앱 설치 실행
+        Button(onClick = { onButtonCallback("PackageInstaller") }, enabled = enableState) {
+            Text("Install from Asset[Package Installer]")
+        }
+
+        Spacer(modifier = Modifier.padding(10.dp))
+
+        //asset 을 app file 로 copy 해서 앱 설치 실행
+        Button(onClick = { onButtonCallback("UnInstall Starbucks") }) {
+            Text("UnInstall Starbucks")
+        }
+
+        Spacer(modifier = Modifier.padding(10.dp))
+
+        //asset 을 app file 로 copy 해서 앱 설치 실행
+        Button(onClick = { onButtonCallback("UnInstall Memo") }) {
+            Text("UnInstall Memo")
         }
     }
 }
