@@ -15,13 +15,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +41,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var downloadController: DownloadController
     private val _isCopyComplete = MutableStateFlow(false)
     private val isCopyComplete = _isCopyComplete.asStateFlow()
+    private val _isDownloadComplete = MutableStateFlow(false)
+    private val isDownloadComplete = _isDownloadComplete.asStateFlow()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -54,7 +54,10 @@ class MainActivity : ComponentActivity() {
         if (granted) {
             // navigate to respective screen
             Log.d("PERMISSIONS", "[PERMISSIONS] All is granted")
-            downloadController.enqueueDownload()
+            _isDownloadComplete.value = true
+            downloadController.enqueueDownload {
+                _isDownloadComplete.value = false
+            }
         } else {
             Log.d("PERMISSIONS", "[PERMISSIONS]All is not granted!")
         }
@@ -85,7 +88,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    InstallApkScreen(getString(R.string.appstore), isCopyComplete) { installType ->
+                    InstallApkScreen(getString(R.string.appstore), isCopyComplete, isDownloadComplete) { installType ->
                         requestPermission(installType)
                     }
                 }
@@ -160,7 +163,10 @@ class MainActivity : ComponentActivity() {
         when(installType) {
             "download" -> {
                 CoroutineScope(Dispatchers.IO).launch {
-                    downloadController.enqueueDownload()
+                    _isDownloadComplete.value = true
+                    downloadController.enqueueDownload {
+                        _isDownloadComplete.value = false
+                    }
 
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@MainActivity, getString(R.string.downloading), Toast.LENGTH_LONG)
@@ -268,49 +274,62 @@ class MainActivity : ComponentActivity() {
 fun InstallApkScreen(
     name: String,
     downloadState: StateFlow<Boolean> ,
+    downloadStateFromServer: StateFlow<Boolean> ,
     onButtonCallback: (String) -> Unit
 ) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    val enableState by downloadState.collectAsState()
+    val loadingState by downloadStateFromServer.collectAsState()
 
-        val enableState by downloadState.collectAsState()
-        Text(text = "$name Test!", style = MaterialTheme.typography.h2)
+    Box(modifier = Modifier) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "$name Test!", style = MaterialTheme.typography.h2)
 
-        Spacer(modifier = Modifier.padding(20.dp))
+            Spacer(modifier = Modifier.padding(20.dp))
 
-        //server 에서 download 받아서 앱 설치 실행
-        Button(onClick = { onButtonCallback("download") }) {
-            Text("Install from Server")
+            //server 에서 download 받아서 앱 설치 실행
+            Button(onClick = { onButtonCallback("download") }) {
+                Text("Install from Server")
+            }
+
+            Spacer(modifier = Modifier.padding(10.dp))
+
+            //asset 을 app file 로 copy 해서 앱 설치 실행
+            Button(onClick = { onButtonCallback("asset") }, enabled = enableState) {
+                Text("Install from Asset")
+            }
+
+            Spacer(modifier = Modifier.padding(10.dp))
+
+            //asset 을 app file 로 copy 해서 앱 설치 실행
+            Button(onClick = { onButtonCallback("PackageInstaller") }, enabled = enableState) {
+                Text("Install from Asset[Package Installer]")
+            }
+
+            Spacer(modifier = Modifier.padding(10.dp))
+
+            //asset 을 app file 로 copy 해서 앱 설치 실행
+            Button(onClick = { onButtonCallback("UnInstall Starbucks") }) {
+                Text("UnInstall Starbucks")
+            }
+
+            Spacer(modifier = Modifier.padding(10.dp))
+
+            //asset 을 app file 로 copy 해서 앱 설치 실행
+            Button(onClick = { onButtonCallback("UnInstall Memo") }) {
+                Text("UnInstall Memo")
+            }
         }
-
-        Spacer(modifier = Modifier.padding(10.dp))
-
-        //asset 을 app file 로 copy 해서 앱 설치 실행
-        Button(onClick = { onButtonCallback("asset") }, enabled = enableState) {
-            Text("Install from Asset")
-        }
-
-        Spacer(modifier = Modifier.padding(10.dp))
-
-        //asset 을 app file 로 copy 해서 앱 설치 실행
-        Button(onClick = { onButtonCallback("PackageInstaller") }, enabled = enableState) {
-            Text("Install from Asset[Package Installer]")
-        }
-
-        Spacer(modifier = Modifier.padding(10.dp))
-
-        //asset 을 app file 로 copy 해서 앱 설치 실행
-        Button(onClick = { onButtonCallback("UnInstall Starbucks") }) {
-            Text("UnInstall Starbucks")
-        }
-
-        Spacer(modifier = Modifier.padding(10.dp))
-
-        //asset 을 app file 로 copy 해서 앱 설치 실행
-        Button(onClick = { onButtonCallback("UnInstall Memo") }) {
-            Text("UnInstall Memo")
+        if (loadingState) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(size = 64.dp)
+                    .align(Alignment.Center),
+                color = Color.Magenta,
+                strokeWidth = 10.dp
+            )
         }
     }
 }
@@ -321,7 +340,10 @@ fun DefaultPreview() {
     val _isCopyComplete = MutableStateFlow(false)
     val isCopyComplete = _isCopyComplete.asStateFlow()
 
+    val _isDownloadComplete = MutableStateFlow(false)
+    val isDownloadComplete = _isDownloadComplete.asStateFlow()
+
     AppStoreSampleTheme {
-        InstallApkScreen(stringResource(id = R.string.appstore), isCopyComplete) {}
+        InstallApkScreen(stringResource(id = R.string.appstore), isCopyComplete, isDownloadComplete) {}
     }
 }

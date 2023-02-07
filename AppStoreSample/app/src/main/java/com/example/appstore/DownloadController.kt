@@ -38,7 +38,7 @@ class DownloadController(
         private const val APP_INSTALL_PATH = "\"application/vnd.android.package-archive\""
     }
 
-    fun enqueueDownload() {
+    fun enqueueDownload(onComplete: () -> Unit) {
         var destination =
             context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString() + "/"
         destination += FILE_NAME
@@ -53,13 +53,14 @@ class DownloadController(
         request.setDescription(context.getString(R.string.downloading))
         // set destination
         request.setDestinationUri(uri)
-        showInstallOption(destination, uri)
+        showInstallOption(destination, uri, onComplete)
         // Enqueue a new download and same the referenceId
         downloadManager.enqueue(request)
     }
     private fun showInstallOption(
         destination: String,
-        uri: Uri
+        uri: Uri,
+        onDownloadComplete: () -> Unit
     ) {
         // set BroadcastReceiver to install app when .apk is downloaded
         val onComplete = object : BroadcastReceiver() {
@@ -92,6 +93,7 @@ class DownloadController(
                     context.unregisterReceiver(this)
                     // finish()
                 }
+                onDownloadComplete()
             }
         }
         context.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
