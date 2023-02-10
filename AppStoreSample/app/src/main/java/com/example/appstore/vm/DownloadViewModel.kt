@@ -1,5 +1,6 @@
-package com.example.appstore
+package com.example.appstore.vm
 
+import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -12,26 +13,26 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.appstore.BuildConfig
+import com.example.appstore.R
+import com.example.appstore.isNCompatibility
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
+import javax.inject.Inject
 
-class DownloadController(
-    private val context: Context,
-    private val url: String
-) {
-    companion object {
-        private const val FILE_NAME = "SampleDownloadApp2.apk"
-        private const val FILE_BASE_PATH = "file://"
-        private const val MIME_TYPE = "application/vnd.android.package-archive"
-        private const val PROVIDER_PATH = ".provider"
-        private const val APP_INSTALL_PATH = "\"application/vnd.android.package-archive\""
-    }
-
-    fun enqueueDownload(onComplete: () -> Unit) {
+@SuppressLint("StaticFieldLeak")
+@HiltViewModel
+class DownloadViewModel @Inject constructor(
+    @ApplicationContext private val context: Context
+): ViewModel() {
+    fun enqueueDownload(url: String, onComplete: () -> Unit) {
         var destination =
             context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString() + "/"
         destination += FILE_NAME
@@ -50,6 +51,7 @@ class DownloadController(
         // Enqueue a new download and same the referenceId
         downloadManager.enqueue(request)
     }
+
     private fun showInstallOption(
         destination: String,
         uri: Uri,
@@ -135,7 +137,7 @@ class DownloadController(
             override fun onProgressChanged(p0: Int, p1: Float) {
                 Log.d("AppStore", "onProgressChanged p0:$p0, p1:$p1")
             }
-            
+
             override fun onFinished(sessionid: Int, success: Boolean) {
                 if (sessionid != sessionId) return
                 if (success) {
@@ -148,7 +150,7 @@ class DownloadController(
             }
         })
     }
-    fun installApkNoUnknownSource(inputStream: InputStream, onComplete: () -> Unit) = CoroutineScope(Dispatchers.IO).launch {
+    fun installApkNoUnknownSource(inputStream: InputStream, onComplete: () -> Unit) = viewModelScope.launch(Dispatchers.IO) {
         try {
             val installer = context.packageManager.packageInstaller
             val params =
@@ -188,13 +190,35 @@ class DownloadController(
     }
     fun uninstallServerDownloadApp() {
         val packageURI = Uri.parse("package:com.starbucks.co")
-        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageURI)
-        context.startActivity(uninstallIntent)
+        try {
+            Intent(Intent.ACTION_DELETE, packageURI).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }.run {
+                context.startActivity(this)
+            }
+        } catch (e: Exception) {
+            Log.e("AppStore", "${e.message}")
+        }
     }
 
     fun uninstallAssetADownloadApp() {
         val packageURI = Uri.parse("package:com.komorebi.memo")
-        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageURI)
-        context.startActivity(uninstallIntent)
+        try {
+            Intent(Intent.ACTION_DELETE, packageURI).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }.run {
+                context.startActivity(this)
+            }
+        } catch (e: Exception) {
+            Log.e("AppStore", "${e.message}")
+        }
+    }
+
+    companion object {
+        private const val FILE_NAME = "SampleDownloadApp2.apk"
+        private const val FILE_BASE_PATH = "file://"
+        private const val MIME_TYPE = "application/vnd.android.package-archive"
+        private const val PROVIDER_PATH = ".provider"
+        private const val APP_INSTALL_PATH = "\"application/vnd.android.package-archive\""
     }
 }

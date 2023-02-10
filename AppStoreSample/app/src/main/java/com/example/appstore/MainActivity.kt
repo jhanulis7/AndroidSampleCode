@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.fonts.FontStyle
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,24 +13,22 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import com.example.appstore.ui.screen.InstallApkScreen
 import com.example.appstore.ui.theme.AppStoreSampleTheme
+import com.example.appstore.vm.DownloadViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,12 +37,14 @@ import java.io.FileOutputStream
 
 //reference : https://androidwave.com/download-and-install-apk-programmatically/
 //https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var downloadController: DownloadController
+    private val viewModel: DownloadViewModel by viewModels()
     private val _isCopyComplete = MutableStateFlow(false)
     private val isCopyComplete = _isCopyComplete.asStateFlow()
     private val _isDownloadComplete = MutableStateFlow(false)
     private val isDownloadComplete = _isDownloadComplete.asStateFlow()
+    private val apkUrl = "https://d.apkpure.com/b/APK/com.starbucks.co?version=latest"
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -58,7 +57,7 @@ class MainActivity : ComponentActivity() {
             // navigate to respective screen
             Log.d("PERMISSIONS", "[PERMISSIONS] All is granted")
             _isDownloadComplete.value = true
-            downloadController.enqueueDownload {
+            viewModel.enqueueDownload(apkUrl) {
                 _isDownloadComplete.value = false
             }
         } else {
@@ -73,7 +72,7 @@ class MainActivity : ComponentActivity() {
             if (packageManager.canRequestPackageInstalls()) {
                 Log.d("AppStoreSample", "canRequestPackageInstalls success")
                 Toast.makeText(this, "Unknown App Source granted!!", Toast.LENGTH_SHORT).show()
-                downloadController.installAssetApk()
+                viewModel.installAssetApk()
             }
         }
     }
@@ -81,7 +80,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        initServerDownload()
         initAssetCopyToApp()
 
         setContent {
@@ -167,7 +165,7 @@ class MainActivity : ComponentActivity() {
             "download" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     _isDownloadComplete.value = true
-                    downloadController.enqueueDownload {
+                    viewModel.enqueueDownload(apkUrl) {
                         _isDownloadComplete.value = false
                     }
 
@@ -195,11 +193,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun initServerDownload() {
-        //starbucks sample apk
-        val apkUrl = "https://d.apkpure.com/b/APK/com.starbucks.co?version=latest"
-        downloadController = DownloadController(this, apkUrl)
-    }
+//    private fun initServerDownload() {
+//        //starbucks sample apk
+//        downloadController = DownloadController(this, apkUrl)
+//    }
     private fun initAssetCopyToApp() {
         //for asset installer
         val outPath= filesDir.absolutePath + "/app.apk"
@@ -240,7 +237,7 @@ class MainActivity : ComponentActivity() {
             Log.e("AppStoreSample", "Already UnKnown App Source")
             Toast.makeText(this, "Already UnKnown App Source", Toast.LENGTH_SHORT).show()
             //이미 permission 있으면, install 로직 구현
-            downloadController.installAssetApk()
+            viewModel.installAssetApk()
             return
         }
 
@@ -258,87 +255,18 @@ class MainActivity : ComponentActivity() {
 
     private fun requestNoUnknownSource() {
         val inputStream = assets.open("app.apk")
-        downloadController.installApkNoUnknownSource(inputStream) {
+        viewModel.installApkNoUnknownSource(inputStream) {
             inputStream.close()
         }
     }
 
     private fun requestUnInstallMemo() {
-        downloadController.uninstallAssetADownloadApp()
+        viewModel.uninstallAssetADownloadApp()
 
     }
 
     private fun requestUnInstallStarbucks() {
-        downloadController.uninstallServerDownloadApp()
-    }
-}
-
-@Composable
-fun InstallApkScreen(
-    name: String,
-    downloadState: StateFlow<Boolean> ,
-    downloadStateFromServer: StateFlow<Boolean> ,
-    onButtonCallback: (String) -> Unit
-) {
-    val enableState by downloadState.collectAsState()
-    val loadingState by downloadStateFromServer.collectAsState()
-
-    Box(modifier = Modifier) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "$name Test!",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.h2
-            )
-
-            Spacer(modifier = Modifier.padding(10.dp))
-
-            //server 에서 download 받아서 앱 설치 실행
-            Button(onClick = { onButtonCallback("download") }) {
-                Text("Install Starbucks from Server")
-            }
-
-            Spacer(modifier = Modifier.padding(5.dp))
-
-            //asset 을 app file 로 copy 해서 앱 설치 실행
-            Button(onClick = { onButtonCallback("asset") }, enabled = enableState) {
-                Text("Install Memo from Asset[FileProvider]")
-            }
-
-            Spacer(modifier = Modifier.padding(5.dp))
-
-            //asset 을 app file 로 copy 해서 앱 설치 실행
-            Button(onClick = { onButtonCallback("PackageInstaller") }, enabled = enableState) {
-                Text("Install Memo from Asset[Package Installer]")
-            }
-
-            Spacer(modifier = Modifier.padding(5.dp))
-
-            //asset 을 app file 로 copy 해서 앱 설치 실행
-            Button(onClick = { onButtonCallback("UnInstall Starbucks") }) {
-                Text("UnInstall Starbucks")
-            }
-
-            Spacer(modifier = Modifier.padding(5.dp))
-
-            //asset 을 app file 로 copy 해서 앱 설치 실행
-            Button(onClick = { onButtonCallback("UnInstall Memo") }) {
-                Text("UnInstall Memo")
-            }
-        }
-        if (loadingState) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(size = 64.dp)
-                    .align(Alignment.Center),
-                color = Color.Magenta,
-                strokeWidth = 10.dp
-            )
-        }
+        viewModel.uninstallServerDownloadApp()
     }
 }
 
