@@ -133,7 +133,7 @@ class DownloadController(
             }
 
             override fun onProgressChanged(p0: Int, p1: Float) {
-                Log.d("AppStore", "onProgressChanged")
+                Log.d("AppStore", "onProgressChanged p0:$p0, p1:$p1")
             }
             
             override fun onFinished(sessionid: Int, success: Boolean) {
