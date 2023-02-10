@@ -1,6 +1,5 @@
 package com.example.appstore
 
-import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -9,21 +8,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInstaller
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStream
 
 class DownloadController(
@@ -68,7 +61,7 @@ class DownloadController(
                 context: Context,
                 intent: Intent
             ) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (isNCompatibility()) {
                     val contentUri = FileProvider.getUriForFile(
                         context,
                         BuildConfig.APPLICATION_ID + PROVIDER_PATH,
@@ -124,6 +117,37 @@ class DownloadController(
         }
     }
 
+    private fun registerInstaller(sessionId: Int) {
+        val installer = context.packageManager.packageInstaller
+        installer.registerSessionCallback(object : PackageInstaller.SessionCallback() {
+            override fun onCreated(sessionid: Int) {
+                Log.d("AppStore", "onCreated: installer created")
+            }
+
+            override fun onBadgingChanged(p0: Int) {
+                Log.d("AppStore", "onBadgingChanged")
+            }
+
+            override fun onActiveChanged(p0: Int, p1: Boolean) {
+                Log.d("AppStore", "onActiveChanged")
+            }
+
+            override fun onProgressChanged(p0: Int, p1: Float) {
+                Log.d("AppStore", "onProgressChanged")
+            }
+            
+            override fun onFinished(sessionid: Int, success: Boolean) {
+                if (sessionid != sessionId) return
+                if (success) {
+                    Log.d("AppStore", "onFinished: installation successful! sessionid:$sessionid")
+                    Toast.makeText(context,
+                        context.resources.getString(R.string.install_complete), Toast.LENGTH_LONG).show()
+                } else {
+                    Log.d("AppStore", "onFinished: installation failed")
+                }
+            }
+        })
+    }
     fun installApkNoUnknownSource(inputStream: InputStream, onComplete: () -> Unit) = CoroutineScope(Dispatchers.IO).launch {
         try {
             val installer = context.packageManager.packageInstaller
@@ -140,17 +164,24 @@ class DownloadController(
                 if (c == -1) break
                 out.write(buffer, 0, c)
             } while (true)
+
             session.fsync(out)
             //inputStream.close()
             onComplete.invoke()
             out.close()
-            val p: PendingIntent = PendingIntent.getBroadcast(
+
+            withContext(Dispatchers.Main) {
+                registerInstaller(sessionId)
+            }
+
+            PendingIntent.getBroadcast(
                 context,
-                0,
-                Intent(),
-                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            session.commit(p.intentSender)
+                sessionId,
+                Intent(Intent.ACTION_PACKAGE_ADDED),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            ).run {
+                session.commit(intentSender)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

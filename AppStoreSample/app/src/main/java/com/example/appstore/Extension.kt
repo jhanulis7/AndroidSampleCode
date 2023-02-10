@@ -19,3 +19,4 @@ fun ComponentActivity.requestPermissionsCompat(
 fun isQCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 fun isRCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
 fun isSCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+fun isNCompatibility(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N

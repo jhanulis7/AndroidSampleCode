@@ -10,6 +10,7 @@
 
     <string name="str_msg_permission_attach">애플리케이션>앱 권한 메뉴로 이동 하여 필요한 권한을 허용 으로 설정해 주세요.</string>
     <string name="confirm_button_text">확인</string>
-    <string name="copy_asset_to_file">Asset Copy Downloading…</string>
+    <string name="copy_asset_to_file">please wait... during Asset Copy Downloading…</string>
+    <string name="install_complete">앱 설치 완료 하였습니다.</string>
 
 </resources>

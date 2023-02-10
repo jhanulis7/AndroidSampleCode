@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.fonts.FontStyle
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -21,8 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import com.example.appstore.ui.theme.AppStoreSampleTheme
 import kotlinx.coroutines.CoroutineScope
@@ -285,37 +288,42 @@ fun InstallApkScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "$name Test!", style = MaterialTheme.typography.h2)
+            Text(
+                text = "$name Test!",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.h2
+            )
 
-            Spacer(modifier = Modifier.padding(20.dp))
+            Spacer(modifier = Modifier.padding(10.dp))
 
             //server 에서 download 받아서 앱 설치 실행
             Button(onClick = { onButtonCallback("download") }) {
-                Text("Install from Server")
+                Text("Install Starbucks from Server")
             }
 
-            Spacer(modifier = Modifier.padding(10.dp))
+            Spacer(modifier = Modifier.padding(5.dp))
 
             //asset 을 app file 로 copy 해서 앱 설치 실행
             Button(onClick = { onButtonCallback("asset") }, enabled = enableState) {
-                Text("Install from Asset")
+                Text("Install Memo from Asset[FileProvider]")
             }
 
-            Spacer(modifier = Modifier.padding(10.dp))
+            Spacer(modifier = Modifier.padding(5.dp))
 
             //asset 을 app file 로 copy 해서 앱 설치 실행
             Button(onClick = { onButtonCallback("PackageInstaller") }, enabled = enableState) {
-                Text("Install from Asset[Package Installer]")
+                Text("Install Memo from Asset[Package Installer]")
             }
 
-            Spacer(modifier = Modifier.padding(10.dp))
+            Spacer(modifier = Modifier.padding(5.dp))
 
             //asset 을 app file 로 copy 해서 앱 설치 실행
             Button(onClick = { onButtonCallback("UnInstall Starbucks") }) {
                 Text("UnInstall Starbucks")
             }
 
-            Spacer(modifier = Modifier.padding(10.dp))
+            Spacer(modifier = Modifier.padding(5.dp))
 
             //asset 을 app file 로 copy 해서 앱 설치 실행
             Button(onClick = { onButtonCallback("UnInstall Memo") }) {
