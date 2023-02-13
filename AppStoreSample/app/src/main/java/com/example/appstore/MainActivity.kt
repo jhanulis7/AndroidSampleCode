@@ -15,9 +15,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,8 +36,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-//reference : https://androidwave.com/download-and-install-apk-programmatically/
-//https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/
+// reference : https://androidwave.com/download-and-install-apk-programmatically/
+// https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: DownloadViewModel by viewModels()
@@ -47,7 +48,7 @@ class MainActivity : ComponentActivity() {
     private val apkUrl = "https://d.apkpure.com/b/APK/com.starbucks.co?version=latest"
 
     private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
+        ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         val granted = permissions.entries.all {
             Log.d("PERMISSIONS", "${it.key} = ${it.value}")
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private val packageInstallerLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
+        ActivityResultContracts.StartActivityForResult(),
     ) {
         if (isQCompatibility()) {
             if (packageManager.canRequestPackageInstalls()) {
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -87,7 +88,7 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    color = MaterialTheme.colors.background,
                 ) {
                     InstallApkScreen(getString(R.string.appstore), isCopyComplete, isDownloadComplete) { installType ->
                         requestPermission(installType)
@@ -104,13 +105,13 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton(getString(R.string.confirm_button_text)) { _, _ ->
                 if (doNotAskAgain) {
                     try {
-                        //Open the specific App Info page:
+                        // Open the specific App Info page:
                         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                             data = Uri.parse("package:$packageName")
                         }.also { startActivity(it) }
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        //Open the generic Apps page:
+                        // Open the generic Apps page:
                         Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS).apply {
                             data = Uri.parse("package:$packageName")
                         }.also { startActivity(it) }
@@ -134,10 +135,9 @@ class MainActivity : ComponentActivity() {
         alertDialogBuilder.show()
     }
 
-
     private fun requestPermission(installType: String) {
         var doNotAskAgain = false
-        //		\n\n- 위치\n- 전화\n- 저장\n
+        // 		\n\n- 위치\n- 전화\n- 저장\n
         var needPermissions = ""
 
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
@@ -159,9 +159,9 @@ class MainActivity : ComponentActivity() {
             runButtonTest(installType)
         }
     }
-    
+
     private fun runButtonTest(installType: String) {
-        when(installType) {
+        when (installType) {
             "download" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     _isDownloadComplete.value = true
@@ -198,8 +198,8 @@ class MainActivity : ComponentActivity() {
 //        downloadController = DownloadController(this, apkUrl)
 //    }
     private fun initAssetCopyToApp() {
-        //for asset installer
-        val outPath= filesDir.absolutePath + "/app.apk"
+        // for asset installer
+        val outPath = filesDir.absolutePath + "/app.apk"
 
         if (!File(outPath).exists()) {
             Toast.makeText(this@MainActivity, getString(R.string.copy_asset_to_file), Toast.LENGTH_LONG)
@@ -236,18 +236,18 @@ class MainActivity : ComponentActivity() {
         if (packageManager.canRequestPackageInstalls()) {
             Log.e("AppStoreSample", "Already UnKnown App Source")
             Toast.makeText(this, "Already UnKnown App Source", Toast.LENGTH_SHORT).show()
-            //이미 permission 있으면, install 로직 구현
+            // 이미 permission 있으면, install 로직 구현
             viewModel.installAssetApk()
             return
         }
 
-        //permission 필요 하면, 퍼미션 설정 화면 요청
-        //setData 를 하지 않으면, unknown app 관련 요청 앱들 리스트가 보인 상태에서 해당 패키지앱 선택하도록 하고,
-        //package 전달 하면 해당앱을 선택 하여 스위치 버튼이 나오는 설정앱이 나옴
-        //설정이 끝나면, packageInstallerLauncher 에서 다시 한번 canRequestPackageInstalls 확인 하여 다음 액션을 취함
+        // permission 필요 하면, 퍼미션 설정 화면 요청
+        // setData 를 하지 않으면, unknown app 관련 요청 앱들 리스트 보인 상태 에서 해당 패키지 앱 선택 하도록 하고,
+        // package 전달 하면 해당 앱을 선택 하여 스위치 버튼이 나오는 설정 앱이 나옴
+        // 설정이 끝나면, packageInstallerLauncher 에서 다시 한번 canRequestPackageInstalls 확인 하여 다음 액션을 취함
         Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
             .setData(
-                Uri.parse("package:$packageName")
+                Uri.parse("package:$packageName"),
             ).run {
                 packageInstallerLauncher.launch(this)
             }
@@ -262,7 +262,6 @@ class MainActivity : ComponentActivity() {
 
     private fun requestUnInstallMemo() {
         viewModel.uninstallAssetADownloadApp()
-
     }
 
     private fun requestUnInstallStarbucks() {
@@ -273,11 +272,8 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val _isCopyComplete = MutableStateFlow(false)
-    val isCopyComplete = _isCopyComplete.asStateFlow()
-
-    val _isDownloadComplete = MutableStateFlow(false)
-    val isDownloadComplete = _isDownloadComplete.asStateFlow()
+    val isCopyComplete = MutableStateFlow(false).asStateFlow()
+    val isDownloadComplete = MutableStateFlow(false).asStateFlow()
 
     AppStoreSampleTheme {
         InstallApkScreen(stringResource(id = R.string.appstore), isCopyComplete, isDownloadComplete) {}
