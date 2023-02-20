@@ -71,3 +71,11 @@ Android Sample Code Project WorkSpace
 - 서버에서 다운로드 하여 앱 설치 / asset file 을 읽어서 앱 설치
 - [reference server code](https://androidwave.com/download-and-install-apk-programmatically/)
 - [reference asset code](https://codechacha.com/ko/how-to-install-and-uninstall-app-in-android/)
+
+## 13. NavigationSample
+- compose navigation sample
+- home screen 에서 이름을 입력받고, Welcome 에서 이름 받아서 보여주고, Profile 스크린으로 넘어가는데, 백키시 홈으로 넘어가도록 설정함
+- Outline text 예제로 hoisting 도 함께 구현
+- <p align="center"><img src = "https://github.com/jhanulis7/JetpackComposeSample/blob/main/NavigationSample/compose-navi-1.png" width="30%" height="30%">
+  <img src = "https://github.com/jhanulis7/JetpackComposeSample/blob/main/NavigationSample/compose-navi-2" width="30%" height="30%">
+  <img src = "https://github.com/jhanulis7/JetpackComposeSample/blob/main/NavigationSample/compose-navi-3" width="30%" height="30%"></p>
