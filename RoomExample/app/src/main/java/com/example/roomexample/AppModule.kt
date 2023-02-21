@@ -8,22 +8,18 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
     @Singleton
     @Provides
-    fun provideProductDao(productRoomDatabase: ProductRoomDatabase) : ProductDao =
-        productRoomDatabase.productDao()
+    fun provideAppDatabase(@ApplicationContext context: Context) : ProductRoomDatabase {
+        return ProductRoomDatabase.getInstance(context)
+    }
 
     @Singleton
     @Provides
-    fun provideAppDatabase(@ApplicationContext context: Context) : ProductRoomDatabase =
-        Room.databaseBuilder(
-            context.applicationContext,
-            ProductRoomDatabase::class.java,
-            "product_database"
-        ).fallbackToDestructiveMigration()
-        .build()
+    fun provideProductDao(productRoomDatabase: ProductRoomDatabase) : ProductDao =
+        productRoomDatabase.productDao()
 }
+
