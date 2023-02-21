@@ -1,41 +1,52 @@
 package com.example.roomexample
 
-import android.app.Application
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(application: Application) : ViewModel() {
-    val allProducts: LiveData<List<Product>> by lazy {
-        repository.allProducts
-    }
-    val searchResults: MutableLiveData<List<Product>> by lazy {
-        repository.searchResults
-    }
-    private val repository: ProductRepository by lazy {
-        val productDb = ProductRoomDatabase.getInstance(application)
-        val productDao = productDb.productDao()
-        ProductRepository(productDao)
-    }
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    private val repository: ProductRepository
+) : ViewModel() {
+    private val _searchResults = MutableStateFlow<List<Product>>(listOf())
+    val searchResults = _searchResults.asStateFlow()
+    private val _allProducts = MutableStateFlow<List<Product>>(listOf())
+    val allProducts = _allProducts.asStateFlow()
 
-//    init {
-//        val productDb = ProductRoomDatabase.getInstance(application)
-//        val productDao = productDb.productDao()
-//        repository = ProductRepository(productDao)
-//
-//        allProducts =
-//        searchResults = repository.searchResults
-//    }
-
-    fun insertProduct(product: Product) {
+    init {
+        getAllProjects()
+    }
+    fun insertProduct(product: Product) = viewModelScope.launch(Dispatchers.IO) {
         repository.insertProduct(product)
     }
 
-    fun findProduct(name: String) {
-        repository.findProduct(name)
+    fun updateProduct(name: Product) = viewModelScope.launch(Dispatchers.IO) {
+        repository.updateProduct(name)
     }
 
-    fun deleteProduct(name: String) {
+    fun searchProducts(name: String) = viewModelScope.launch(Dispatchers.IO) {
+        repository.getSearchResult(name).collect {
+            _searchResults.emit(it)
+        }
+    }
+
+    fun deleteProduct(name: String) = viewModelScope.launch(Dispatchers.IO) {
         repository.deleteProduct(name)
+    }
+
+    fun deleteAll() = viewModelScope.launch(Dispatchers.IO) {
+        repository.deleteAll()
+    }
+
+    fun getAllProjects() = viewModelScope.launch(Dispatchers.IO) {
+        repository.getAllProducts().distinctUntilChanged().collect {
+            _allProducts.emit(it)
+        }
     }
 }

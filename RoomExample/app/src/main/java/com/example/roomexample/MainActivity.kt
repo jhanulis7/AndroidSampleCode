@@ -1,9 +1,9 @@
 package com.example.roomexample
 
-import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,23 +11,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.roomexample.ui.theme.RoomExampleTheme
-import kotlin.math.sin
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -37,15 +37,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background,
                 ) {
-                    val owner = LocalViewModelStoreOwner.current
-                    owner?.let {
-                        val viewModel: MainViewModel = viewModel(
-                            it,
-                            "MainViewModel",
-                            MainViewModelFactory(LocalContext.current.applicationContext as Application)
-                        )
-                        ScreenSetup(viewModel)
-                    }
+                    ScreenSetup(viewModel)
                 }
             }
         }
@@ -54,11 +46,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ScreenSetup(
-    viewModel: MainViewModel =
-        MainViewModel(LocalContext.current.applicationContext as Application)
+    viewModel: MainViewModel = hiltViewModel()
 ) {
-    val allProducts by viewModel.allProducts.observeAsState(listOf())
-    val searchResults by viewModel.searchResults.observeAsState(listOf())
+    val allProducts by viewModel.allProducts.collectAsState(listOf())
+    val searchResults by viewModel.searchResults.collectAsState(listOf())
 
     MainScreen(
         allProducts = allProducts,
@@ -129,7 +120,7 @@ fun MainScreen(
 
             Button(onClick = {
                 searching = true
-                viewModel.findProduct(productName)
+                viewModel.searchProducts(productName)
             }) {
                 Text(text = "Search")
             }

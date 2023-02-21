@@ -1,21 +1,25 @@
 package com.example.roomexample
 
-import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
-    @Insert
-    fun insertProduct(product: Product)
+    @Query("SELECT * FROM products")
+    fun getAllProducts(): Flow<List<Product>>
 
     @Query("SELECT * FROM products WHERE productName = :name")
-    fun findProduct(name: String): List<Product>
+    fun searchProducts(name: String): Flow<List<Product>>
+
+    @Insert
+    suspend fun insertProduct(product: Product)
+
+    @Update
+    suspend fun updateProduct(product: Product)
 
     @Query("DELETE FROM products WHERE productName = :name")
-    fun deleteProduct(name: String)
+    suspend fun deleteProduct(name: String)
 
-    @Query("SELECT * FROM products")
-    fun getAllProducts(): LiveData<List<Product>>
+    @Query("DELETE FROM products")
+    suspend fun deleteAll()
 }

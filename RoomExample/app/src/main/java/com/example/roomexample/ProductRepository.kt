@@ -1,35 +1,23 @@
 package com.example.roomexample
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOn
+import javax.inject.Inject
 
-class ProductRepository (private val productDao: ProductDao) {
-    val allProducts: LiveData<List<Product>> = productDao.getAllProducts()
-    val searchResults = MutableLiveData<List<Product>>()
+class ProductRepository @Inject constructor(private val productDao: ProductDao) {
+    suspend fun insertProduct(newProduct: Product) = productDao.insertProduct(newProduct)
+    suspend fun updateProduct(newProduct: Product) = productDao.updateProduct(newProduct)
+    suspend fun deleteProduct(name: String) = productDao.deleteProduct(name)
+    suspend fun deleteAll() = productDao.deleteAll()
+    fun getAllProducts() : Flow<List<Product>> = productDao.getAllProducts()
+        .flowOn(Dispatchers.IO)
+        .conflate()
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+    fun getSearchResult(name: String) : Flow<List<Product>> = productDao.searchProducts(name)
+        .flowOn(Dispatchers.IO)
+        .conflate()
 
-    fun insertProduct(newProduct: Product) {
-        coroutineScope.launch(Dispatchers.IO) {
-            productDao.insertProduct(newProduct)
-        }
-    }
-
-    fun deleteProduct(name: String) {
-        coroutineScope.launch(Dispatchers.IO) {
-            productDao.deleteProduct(name)
-        }
-    }
-
-    fun findProduct(name: String) {
-        coroutineScope.launch(Dispatchers.Main) {
-            searchResults.value = asyncFind(name).await()
-        }
-    }
-
-    private fun asyncFind(name: String) : Deferred<List<Product>?> =
-        coroutineScope.async(Dispatchers.IO) {
-            return@async productDao.findProduct(name)
-        }
 }
