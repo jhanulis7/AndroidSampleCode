@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "ComposeBomSample"
 include ':app'
+include(":libComponent")
+include(":common:database")
