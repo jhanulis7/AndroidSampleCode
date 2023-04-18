@@ -1,5 +1,6 @@
 package com.my.sample.algorithmmatrial3.ui.manager
 
+import com.my.sample.algorithmmatrial3.flow.Flow1Quiz
 import com.my.sample.algorithmmatrial3.quiz.Level1Quiz
 import com.my.sample.algorithmmatrial3.quiz.Level2Quiz
 import javax.inject.Inject
@@ -11,6 +12,8 @@ class QuizManager @Inject constructor() {
     lateinit var level1Quiz: Level1Quiz
     @Inject
     lateinit var level2Quiz: Level2Quiz
+    @Inject
+    lateinit var flow1Quiz: Flow1Quiz
 
     fun getMap() : Map<String, String> {
         val map = mutableMapOf<String, String>()
