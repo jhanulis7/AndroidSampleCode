@@ -44,6 +44,7 @@ android {
 
 dependencies {
     implementation(project(":libComponent"))
+    implementation(project(":libVehicle"))
     implementation(project(":common:database"))
 
     implementation("androidx.core:core-ktx:1.9.0")

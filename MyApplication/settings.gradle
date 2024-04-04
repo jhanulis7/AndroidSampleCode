@@ -12,8 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "ComposeBomSample"
+rootProject.name = "My Application"
 include ':app'
-include(":libComponent")
-include(":libVehicle")
-include(":common:database")

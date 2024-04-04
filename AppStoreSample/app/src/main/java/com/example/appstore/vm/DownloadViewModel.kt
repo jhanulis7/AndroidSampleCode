@@ -71,6 +71,7 @@ class DownloadViewModel @Inject constructor(
                     )
                     val install = Intent(Intent.ACTION_VIEW)
                     install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    install.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     install.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     install.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
                     install.data = contentUri
@@ -161,7 +162,7 @@ class DownloadViewModel @Inject constructor(
             val out = session.openWrite("COSU", 0, -1)
             val buffer = ByteArray(65536)
             do {
-                val c = inputStream.read(buffer)
+                val c = inputStream.read()
                 Log.d("AppStore", "read: $c")
                 if (c == -1) break
                 out.write(buffer, 0, c)
